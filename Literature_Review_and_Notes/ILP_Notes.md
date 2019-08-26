@@ -1,5 +1,5 @@
 # Interledger Protocol
-### Author: Saharsh Agrawal, Berkeley EECS
+Author: Saharsh Agrawal, Berkeley EECS
 ## What is ILP?
 A multi-hope streaming network protocol allowing for micropayments and interoperability between different ledgers.
 ILP uses *conditional transfers* to secure payments across multiple hops and through untrusted connectors. Only local trust is required. Atomicity is obtained through two-phase commits.

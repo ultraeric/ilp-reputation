@@ -1,5 +1,5 @@
 # Building a Reputation System on top of ILP
-### Author: Saharsh Agrawal, Berkeley EECS
+Author: Saharsh Agrawal, Berkeley EECS
 ## User --> Connector (Blockchain-enabled)
 **High-level overview:**  
 To send payment between two accounts (Alice and Bob), Alice will first preload funds into some payment channel, communicate with a connector to send these funds, and once the `fulfill` packet/ receipt is forwarded by connector C1 to the payment channel between Alice and C1, then the funds are disbursed from the payment channel escrow to C1.  

@@ -1,0 +1,5 @@
+CONNECTOR_STORE_PATH=~/.connector-data CONNECTOR_ACCOUNTS='{}' CONNECTOR_ADMIN_API=true CONNECTOR_ILP_ADDRESS=test.quickstart ilp-connector
+
+
+
+

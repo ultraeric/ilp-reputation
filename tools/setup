@@ -1,0 +1,2 @@
+npm install -g ilp-connector ilp-plugin-btp
+npm install -g pm2

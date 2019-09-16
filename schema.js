@@ -1,16 +1,11 @@
 const mongoose = require('mongoose');
 
-const PaymentAgreementsSchema = new mongoose.Schema({
-    PaymentAgreements: Set,
-    BipartisanPaymentAgreements: {
-        type: Set,
-        required: [true, 'BipartisanPaymentAgreements is required.']
-    },
-    ReputationAccounts: {
-
-    }
+// TODO: Remove and replace with public key infrastructure
+const IPPublicKeyPairSchema = new mongoose.Schema({
+    ipAddress: String,
+    publicKey: String,
 });
 
 
 
-module.exports = {TransactionSchema, PaymentChannelSchema};
+module.exports = { IPPublicKeyPairSchema };

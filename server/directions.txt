@@ -13,4 +13,4 @@ For testing:
         $ node
         > var con = require('./test-node');
         > con.SetWebSocket('ws://localhost:9030');
-        > con.testSend('9998ws://localhost:9031');
+        > con.testSend('9998ws://localhost:3031');

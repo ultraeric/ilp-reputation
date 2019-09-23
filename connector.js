@@ -1,105 +1,106 @@
-const dbSchema = require('./schema');
-const jsrsasign = require('jsrsasign');
-const mongoose = require('mongoose');
-const WebSocket = require('ws');
-
 /*
     Notes
     -Abstract away events
     -Abstract away public key infrastructure
     -Abstract payment channel routing
+    -Packets are temporarily replaced with JSON
+    -Replace signature algorithm with ILP's signature algorithm
     -JSON.stringify puts "" around strings, leaving vulnerabilities for a receiver to have those quotes unparse
- */
+*/
+const jsrsasign = require('jsrsasign');
+const SortedArray = require('sorted-array');
 
-let socket;
 const masterKeyPair = jsrsasign.KEYUTIL.generateKeypair("RSA", 2048); // TODO: This will be generated on ILP instead
-IPPublicKeyPair = mongoose.model('IPPublicKeyPair', dbSchema.IPPublicKeyPairSchema); // TODO: Replace
+const publicKeyInfrastructure = {}; // Maps IP addresses to verifying public key
+const supportedReputationCalculators = new Set();
+const pendingPaymentAgreements = {};
+const expiringPendingPaymentAgreements = new SortedArray([], compareExpiration);
+const disputeHashes = {};
 
+let activationTSThreshold = 1;
 
-function BroadcastPaymentAgreementConsent() {
+function compareExpiration(expirationAndPaymentAgreementHashPair1, expirationAndPaymentAgreementHashPair2) {
+    return expirationAndPaymentAgreementHashPair1[0] - expirationAndPaymentAgreementHashPair2[0]
 }
 
-function ReceivePaymentAgreement(serializedPaymentAgreementCertificate, publicKey) {
+function getNextConnector() {
+    // Gets the next connector in the payment path
+}
+
+function identifyPacket(packet) {
+    if (packet.substring(0, 4) == '0000') {
+        console.log('paymentAgreement');
+        ReceivePaymentAgreement(packet);
+    }
+}
+
+function isAcceptablePaymentAgreement(paymentAgreement) {
+    const publicKey = publicKeyInfrastructure[paymentAgreement.creditorAddress];
+    const publicKeyObj = jsrsasign.KEYUTIL.getKey(publicKey);
+    const signingAlgorithm = new jsrsasign.KJUR.crypto.Signature({"alg": "SHA256withRSA"});
+    signingAlgorithm.init(publicKeyObj);
+    signingAlgorithm.updateString(serializedPaymentAgreement);
+    if (paymentAgreement.reputationCalculatorID in supportedReputationCalculators &&
+        paymentAgreement.activationTS < Date.now() + activationTSThreshold &&
+        signingAlgorithm.verify(signature)) {
+        return true;
+    }
+    // If payment agreement matches criteria and debtor's reputation is sufficient, return true
+    return false;
+}
+
+function isValidPaymentAgreement(serializedPaymentAgreement, paymentAgreement, signature) {
+
+
+    if (signingAlgorithm.verify(signature) && ) {
+        return true;
+    }
+}
+
+function ReceivePaymentAgreement(serializedPaymentAgreementCertificate) {
     if (serializedPaymentAgreementCertificate.length > 512) {
-        let signature = serializedPaymentAgreementCertificate.substring(
+        const signature = serializedPaymentAgreementCertificate.substring(
             serializedPaymentAgreementCertificate.length - 512);
-        let serializedPaymentAgreement = serializedPaymentAgreementCertificate.substring(0,
+        const serializedPaymentAgreement = serializedPaymentAgreementCertificate.substring(0,
             serializedPaymentAgreementCertificate.length - 512);
-        let publicKeyObj = jsrsasign.KEYUTIL.getKey(publicKey);
-        let signingAlgorithm = new jsrsasign.KJUR.crypto.Signature({"alg": "SHA256withRSA"});
-        signingAlgorithm.init(publicKeyObj);
-        signingAlgorithm.updateString(serializedPaymentAgreement);
-        if (signingAlgorithm.verify(signature)) {
-            console.log('signature valid');
-        }
-        else {
+        const paymentAgreement = JSON.parse(serializedPaymentAgreement);
+        if (isAcceptablePaymentAgreement(paymentAgreement) && isValidPaymentAgreement(serializedPaymentAgreement,
+            paymentAgreement, signature)) {
+            console.log('signature valid and agreement accepted');
+        } else {
             console.log('invalid signature');
+            // Send ILP reject packet
         }
     }
 }
 
-function SendPaymentAgreement(paymentAgreement, passcode) {
+function sendPaymentAgreement(paymentAgreement, passcode) {
     /*
     -JSON paymentAgreement contains:
-    creditorAddress, debtorAddress, sendorAddress, receiverAddress, ledgerID,
+    UUID, creditorAddress, debtorAddress, sendorAddress, receiverAddress, ledgerID,
                               ledgerDebtorAddress, ledgerCreditorAddress, signingExpirationTS,
                               activationTS, intervalPayment, intervalDuration, intervalCount, disputeTL,
-                              counterDisputeTL, ReputationCalculatorID, originalTS
+                              counterDisputeTL, ReputationCalculatorID
     */
-    let privateKeyObj = jsrsasign.KEYUTIL.getKey(jsrsasign.KEYUTIL.getPEM(masterKeyPair.prvKeyObj, "PKCS8PRV",
-        passcode), passcode);
-    let signingAlgorithm = new jsrsasign.KJUR.crypto.Signature({"alg": "SHA256withRSA"});
-    signingAlgorithm.init(privateKeyObj);
     let serializedPaymentAgreement = JSON.stringify(paymentAgreement);
-    signingAlgorithm.updateString(serializedPaymentAgreement);
-    let signature = signingAlgorithm.sign(); // All signatures are 512 bytes
-    socket.send('0000' + serializedPaymentAgreement + signature);
-}
-
-function SetWebSocket(url) {
-    socket = new WebSocket(url);
-    socket.onopen = function () {
-        console.log('Connection Opened');
-    };
-
-    socket.onerror = function (error) {
-        console.error('Webscket Error: ' + error);
-    };
-
-    socket.onmessage = function (msg) {
-        console.log(msg.data);
+    const md = new KJUR.crypto.MessageDigest({alg: "sha1", prov: "cryptojs"});
+    md.updateString(serializedPaymentAgreement);
+    let paymentAgreementHash = md.digest();
+    if (!(paymentAgreementHash in pendingPaymentAgreements)) {
+        let privateKeyObj = jsrsasign.KEYUTIL.getKey(jsrsasign.KEYUTIL.getPEM(masterKeyPair.prvKeyObj, "PKCS8PRV",
+            passcode), passcode);
+        let signingAlgorithm = new jsrsasign.KJUR.crypto.Signature({"alg": "SHA256withRSA"});
+        signingAlgorithm.init(privateKeyObj);
+        signingAlgorithm.updateString(serializedPaymentAgreement);
+        let signature = signingAlgorithm.sign();
+        pendingPaymentAgreements[paymentAgreementHash] = paymentAgreement;
+        expiringPendingPaymentAgreements.insert([paymentAgreement.signingExpirationTS, paymentAgreementHash]);
+        // Send '0000' + serializedPaymentAgreement + signature
+        return '0000' + serializedPaymentAgreement + signature;
     }
 }
 
-// TODO: Remove test functions
 
-function broadcastPubKey() {
-    // 9997
-    console.log(jsrsasign.KEYUTIL.getPEM(masterKeyPair.pubKeyObj));
-    socket.send('9999' + jsrsasign.KEYUTIL.getPEM(masterKeyPair.pubKeyObj));
-}
 
-function savePubKey(ipAddress, publicKey) {
-    // 9999
-    var IPPublicKeyPairRecord = new IPPublicKeyPair({
-        ipAddress,
-        publicKey
-    });
-    console.log(IPPublicKeyPairRecord);
-    IPPublicKeyPairRecord.save((err) => {
-        if (err) {
-            console.log('publicKey save unsuccessful: ' + err);
-        }
-    });
-}
-
-module.exports = {
-    BroadcastPaymentAgreementConsent,
-    ReceivePaymentAgreement,
-    SendPaymentAgreement,
-    SetWebSocket,
-    // TODO: Remove test functions
-    broadcastPubKey,
-    savePubKey,
-    IPPublicKeyPair
-};
+supportedReputationCalculators.add(0);
+sendPaymentAgreement({reputationCalculatorID: 0, signingExpirationTS: Date.now() + 10, });

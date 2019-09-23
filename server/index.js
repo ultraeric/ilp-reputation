@@ -1,6 +1,6 @@
 const dbSchema = require('../schema');
 const mongoose = require('mongoose');
-const node = require('../connector');
+const node = require('../test-connector');
 const WebSocket = require('ws');
 
 const mongoPort = process.env.MONGOPORT || 27017;
@@ -12,21 +12,11 @@ db.once('open', _ => {
 });
 
 db.on('error', err => {
-    console.error('connection error:', err)
+    console.error('connection error:', err);
 });
 
-IPPublicKeyPair = mongoose.model('IPPublicKeyPair', dbSchema.IPPublicKeyPairSchema); // TODO: Replace
-var IPPublicKeyPairRecord = new IPPublicKeyPair({
-    ipAddress: 'lmao',
-    publicKey: 'tru'
-});
-IPPublicKeyPairRecord.markModified()
-console.log(IPPublicKeyPairRecord);
-IPPublicKeyPairRecord.save((err) => {
-    if (err) {
-        console.log('publicKey save unsuccessful: ' + err);
-    }
-});
+
+pubkeyinfra = {};
 
 console.log("WS Engaging");
 
@@ -43,19 +33,11 @@ wss.on('connection', function (ws, req) {
             // TODO: Retrieve pubkey from pubkey infrastructure
             console.log('remoteaddr: ' + req.connection.remoteAddress);
 
-            node.IPPublicKeyPair.findOne({publicKey: req.connection.remoteAddress}, (err, IPPublicKeyPairRecord) => {
-                if (err) {
-                    console.error(err);
-                } else {
-                    console.log('ippubkeypair: ' + IPPublicKeyPairRecord);
-                    if (IPPublicKeyPairRecord) {
-                        node.ReceivePaymentAgreement(packet, IPPublicKeyPairRecord.publicKey);
-                    }
-                }
-            });
+            node.ReceivePaymentAgreement(packet, pubkeyinfra[req.connection.remoteAddress]);
 
         } else if (packetID == '9999') { // TODO: Remove and replace with pubkey infrastructure
-            node.savePubKey(req.connection.remoteAddress, packet);
+            let temp = node.savePubKey(req.connection.remoteAddress, packet);
+            pubkeyinfra[temp[0]] = temp[1];
         }
 
         // TODO: Remove command functions and replace with GUI

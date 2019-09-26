@@ -10,12 +10,15 @@
 const jsrsasign = require('jsrsasign');
 const SortedArray = require('sorted-array');
 
-const masterKeyPair = jsrsasign.KEYUTIL.generateKeypair("RSA", 2048); // TODO: This will be generated on ILP instead
 const publicKeyInfrastructure = {}; // Maps IP addresses to verifying public key
 const supportedReputationCalculators = new Set();
-const pendingPaymentAgreements = {};
-const expiringPendingPaymentAgreements = new SortedArray([], compareExpiration);
+const pendingDebtorPaymentAgreements = {};
+const expiringPendingDebtorPaymentAgreements = new SortedArray([], compareExpiration);
+const acceptedCreditorPaymentAgreements = {};
+const expiringAcceptedCreditorPaymentAgreements = new SortedArray([], compareExpiration);
 const disputeHashes = {};
+
+const masterKeyPair = jsrsasign.KEYUTIL.generateKeypair("RSA", 2048); // TODO: This will be generated on ILP instead
 
 let activationTSThreshold = 1;
 
@@ -30,17 +33,17 @@ function getNextConnector() {
 function identifyPacket(packet) {
     if (packet.substring(0, 4) == '0000') {
         console.log('paymentAgreement');
-        ReceivePaymentAgreement(packet);
+        return ReceivePaymentAgreementProposal(packet.substring(4));
     }
 }
 
-function isAcceptablePaymentAgreement(paymentAgreement) {
+function isAcceptablePaymentAgreementProposal(paymentAgreement, serializedPaymentAgreement, signature) {
     const publicKey = publicKeyInfrastructure[paymentAgreement.creditorAddress];
     const publicKeyObj = jsrsasign.KEYUTIL.getKey(publicKey);
     const signingAlgorithm = new jsrsasign.KJUR.crypto.Signature({"alg": "SHA256withRSA"});
     signingAlgorithm.init(publicKeyObj);
     signingAlgorithm.updateString(serializedPaymentAgreement);
-    if (paymentAgreement.reputationCalculatorID in supportedReputationCalculators &&
+    if (supportedReputationCalculators.has(paymentAgreement.reputationCalculatorID) &&
         paymentAgreement.activationTS < Date.now() + activationTSThreshold &&
         signingAlgorithm.verify(signature)) {
         return true;
@@ -49,58 +52,64 @@ function isAcceptablePaymentAgreement(paymentAgreement) {
     return false;
 }
 
-function isValidPaymentAgreement(serializedPaymentAgreement, paymentAgreement, signature) {
-
-
-    if (signingAlgorithm.verify(signature) && ) {
-        return true;
-    }
-}
-
-function ReceivePaymentAgreement(serializedPaymentAgreementCertificate) {
+function ReceivePaymentAgreementProposal(serializedPaymentAgreementCertificate) {
     if (serializedPaymentAgreementCertificate.length > 512) {
         const signature = serializedPaymentAgreementCertificate.substring(
             serializedPaymentAgreementCertificate.length - 512);
         const serializedPaymentAgreement = serializedPaymentAgreementCertificate.substring(0,
             serializedPaymentAgreementCertificate.length - 512);
         const paymentAgreement = JSON.parse(serializedPaymentAgreement);
-        if (isAcceptablePaymentAgreement(paymentAgreement) && isValidPaymentAgreement(serializedPaymentAgreement,
-            paymentAgreement, signature)) {
+        if (isAcceptablePaymentAgreementProposal(paymentAgreement, serializedPaymentAgreement, signature)) {
             console.log('signature valid and agreement accepted');
+            const md = new jsrsasign.KJUR.crypto.MessageDigest({alg: "sha1", prov: "cryptojs"});
+            md.updateString(serializedPaymentAgreement);
+            const paymentAgreementHash = md.digest();
+            if (!(paymentAgreementHash in acceptedCreditorPaymentAgreements)) {
+                acceptedCreditorPaymentAgreements[paymentAgreementHash] = paymentAgreement;
+                expiringAcceptedCreditorPaymentAgreements.insert([paymentAgreement.intervalDuration *
+                paymentAgreement.intervalCount + paymentAgreement.disputeTL, paymentAgreementHash]);
+                // Proceeds to send another payment agreement to the next connector in the path and then wait for its
+                // response before sending back a signed payment agreement back to the previous connector
+            }
+            else {
+                console.log('repeat packet');
+            }
         } else {
-            console.log('invalid signature');
+            console.log('unacceptable agreement');
             // Send ILP reject packet
         }
     }
 }
 
-function sendPaymentAgreement(paymentAgreement, passcode) {
+function sendPaymentAgreementProposal(paymentAgreement, passcode) {
     /*
     -JSON paymentAgreement contains:
     UUID, creditorAddress, debtorAddress, sendorAddress, receiverAddress, ledgerID,
-                              ledgerDebtorAddress, ledgerCreditorAddress, signingExpirationTS,
+                              ledgerDebtorAddress, ledgerCreditorAddress,
                               activationTS, intervalPayment, intervalDuration, intervalCount, disputeTL,
                               counterDisputeTL, ReputationCalculatorID
     */
     let serializedPaymentAgreement = JSON.stringify(paymentAgreement);
-    const md = new KJUR.crypto.MessageDigest({alg: "sha1", prov: "cryptojs"});
+    const md = new jsrsasign.KJUR.crypto.MessageDigest({alg: "sha1", prov: "cryptojs"});
     md.updateString(serializedPaymentAgreement);
-    let paymentAgreementHash = md.digest();
-    if (!(paymentAgreementHash in pendingPaymentAgreements)) {
+    const paymentAgreementHash = md.digest();
+    if (!(paymentAgreementHash in pendingDebtorPaymentAgreements)) {
         let privateKeyObj = jsrsasign.KEYUTIL.getKey(jsrsasign.KEYUTIL.getPEM(masterKeyPair.prvKeyObj, "PKCS8PRV",
             passcode), passcode);
         let signingAlgorithm = new jsrsasign.KJUR.crypto.Signature({"alg": "SHA256withRSA"});
         signingAlgorithm.init(privateKeyObj);
         signingAlgorithm.updateString(serializedPaymentAgreement);
         let signature = signingAlgorithm.sign();
-        pendingPaymentAgreements[paymentAgreementHash] = paymentAgreement;
-        expiringPendingPaymentAgreements.insert([paymentAgreement.signingExpirationTS, paymentAgreementHash]);
+        pendingDebtorPaymentAgreements[paymentAgreementHash] = paymentAgreement;
+        expiringPendingDebtorPaymentAgreements.insert([paymentAgreement.intervalDuration *
+            paymentAgreement.intervalCount + paymentAgreement.disputeTL, paymentAgreementHash]);
         // Send '0000' + serializedPaymentAgreement + signature
         return '0000' + serializedPaymentAgreement + signature;
     }
 }
 
-
-
+publicKeyInfrastructure['12345'] = jsrsasign.KEYUTIL.getPEM(masterKeyPair.pubKeyObj);
 supportedReputationCalculators.add(0);
-sendPaymentAgreement({reputationCalculatorID: 0, signingExpirationTS: Date.now() + 10, });
+let proposal = sendPaymentAgreementProposal({reputationCalculatorID: 0, activationTS: Date.now() + 10,
+    intervalDuration: 1, intervalCount: 3, disputeTL: 3, creditorAddress: '12345'});
+identifyPacket(proposal);

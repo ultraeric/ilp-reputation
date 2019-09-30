@@ -10,6 +10,10 @@
 const jsrsasign = require('jsrsasign');
 const SortedArray = require('sorted-array');
 
+class Connector {
+
+}
+
 const publicKeyInfrastructure = {}; // Maps IP addresses to verifying public key
 const reputationTable = {};
 const supportedReputationCalculators = new Set();
@@ -45,7 +49,7 @@ function isAcceptablePaymentAgreementProposal(paymentAgreement, serializedPaymen
     const publicKey = publicKeyInfrastructure[paymentAgreement.debtorAddress];
     const publicKeyObj = jsrsasign.KEYUTIL.getKey(publicKey);
     if (supportedReputationCalculators.has(paymentAgreement.reputationCalculatorID) &&
-        paymentAgreement.activationTS > Date.now() + activationTSThreshold &&
+        //paymentAgreement.activationTS > Date.now() + activationTSThreshold &&
         verifyingAlgorithm(publicKeyObj, serializedPaymentAgreement, signature, signingConfig.algorithm)) {
         return true;
     }
@@ -147,7 +151,9 @@ function isAcceptableDispute(dispute, serializedDispute, disputeSignature,  paym
         verifyingAlgorithm(debtorPublicKeyObj, serializedPaymentAgreement, paymentAgreementSignature, signingConfig.algorithm) &&
         verifyingAlgorithm(creditorPublicKeyObj, serializedDispute, disputeSignature, signingConfig.algorithm) &&
         dispute.debt.ts + paymentAgreement.paymentTL < Date.now() &&
-        dispute.debt.ts + paymentAgreement.paymentTL + paymentAgreement.disputeTL > Date.now()
+        dispute.debt.ts + paymentAgreement.paymentTL + paymentAgreement.disputeTL > Date.now() &&
+        dispute.debt.ts > paymentAgreement.activationTS &&
+        dispute.debt.ts < paymentAgreement.expirationTS
     ) {
         return true;
     }
@@ -210,12 +216,14 @@ signingConfig = {
     signatureLength: 512,
     algorithm:"SHA256withRSA"
 };
+/*
 publicKeyInfrastructure['12345'] = jsrsasign.KEYUTIL.getPEM(masterKeyPair.pubKeyObj);
 publicKeyInfrastructure['54321'] = jsrsasign.KEYUTIL.getPEM(masterKeyPair2.pubKeyObj);
 
 supportedReputationCalculators.add(0);
-let proposal = sendPaymentAgreementProposal({reputationCalculatorID: 0, activationTS: Date.now() + 20,
-    paymentTL: 8, disputeTL: 10, debtorAddress: '12345', creditorAddress: '54321'}, "passcode", signingConfig);
+let proposal = sendPaymentAgreementProposal({reputationCalculatorID: 0, activationTS: Date.now() + 200,
+    paymentTL: 8, disputeTL: 10, debtorAddress: '12345', creditorAddress: '54321',
+    expirationTS: Date.now() + 100}, "passcode", signingConfig);
 let paymentAgreementHash = identifyPacket(proposal, signingConfig);
 identifyPacket(proposal, signingConfig);
 
@@ -230,6 +238,7 @@ const debt = {
 const dispute = {
     paymentAgreement: JSON.stringify(acceptedCreditorPaymentAgreements[paymentAgreementHash][0]) + acceptedCreditorPaymentAgreements[paymentAgreementHash][1],
     debt: debt
-};
+};*/
+
 
 

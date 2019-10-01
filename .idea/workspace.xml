@@ -2,11 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="0ef6f24a-1c66-4aad-9718-898be7bda019" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/unittests/unittestconnector.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/connector.js" beforeDir="false" afterPath="$PROJECT_DIR$/connector.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/unittests/unittestconnector.js" beforeDir="false" afterPath="$PROJECT_DIR$/unittests/unittestconnector.js" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/.tmp/" />
     <ignored path="$PROJECT_DIR$/temp/" />
@@ -22,8 +20,11 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/connector.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="438">
-              <caret line="221" column="30" selection-start-line="221" selection-start-column="30" selection-end-line="221" selection-end-column="30" />
+            <state relative-caret-position="392">
+              <caret line="220" column="8" selection-start-line="220" selection-start-column="8" selection-end-line="220" selection-end-column="8" />
+              <folding>
+                <element signature="n#!!doc" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -31,8 +32,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/unittests/unittestconnector.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="390">
-              <caret line="26" column="17" lean-forward="true" selection-start-line="26" selection-start-column="17" selection-end-line="26" selection-end-column="17" />
+            <state relative-caret-position="452">
+              <caret line="114" selection-start-line="114" selection-end-line="114" />
             </state>
           </provider>
         </entry>
@@ -40,7 +41,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$APPLICATION_HOME_DIR$/plugins/JavaScriptLanguage/jsLanguageServicesImpl/external/lib.es5.d.ts">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="416">
+            <state relative-caret-position="13170">
               <caret line="891" column="8" selection-start-line="891" selection-start-column="8" selection-end-line="891" selection-end-column="8" />
             </state>
           </provider>
@@ -113,12 +114,16 @@
       <find>in</find>
       <find>md</find>
       <find>now</find>
-      <find>prov</find>
       <find>hashing</find>
       <find>receivepaymentagree</find>
       <find>br</find>
-      <find>receivebroadcast</find>
       <find>con</find>
+      <find>receivebroadcast</find>
+      <find>prov</find>
+      <find>expirationTL</find>
+      <find>expirationTS</find>
+      <find>disputehashes</find>
+      <find>disputes</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -136,12 +141,12 @@
         <option value="$PROJECT_DIR$/server/directions.txt" />
         <option value="$PROJECT_DIR$/test-connector.js" />
         <option value="$PROJECT_DIR$/unittestconnector.js" />
-        <option value="$PROJECT_DIR$/connector.js" />
         <option value="$PROJECT_DIR$/unittests/unittestconnector.js" />
+        <option value="$PROJECT_DIR$/connector.js" />
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds" extendedState="4">
+  <component name="ProjectFrameBounds" extendedState="6">
     <option name="x" value="67" />
     <option name="y" value="25" />
     <option name="width" value="927" />
@@ -152,6 +157,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -178,12 +184,11 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/unittests" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/unittests/unittestconnector.js" />
     <property name="nodejs.mocha.mocha_node_package_dir" value="$PROJECT_DIR$/node_modules/mocha" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
@@ -206,7 +211,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Mocha.unittests">
+  <component name="RunManager" selected="Mocha.#paymentAgreements.receiveBroadcastDispute valid dispute">
     <configuration type="NodeJSConfigurationType" path-to-js-file="$PROJECT_DIR$/unittests/unittestconnector.js" working-dir="$PROJECT_DIR$">
       <method v="2" />
     </configuration>
@@ -222,25 +227,63 @@
       <setting name="jsFile" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="unittests" type="mocha-javascript-test-runner" nameIsGenerated="true">
+    <configuration name="#paymentAgreements.receiveBroadcastDispute invalid signature on payment agreement" type="mocha-javascript-test-runner" temporary="true" nameIsGenerated="true">
       <node-interpreter>project</node-interpreter>
       <node-options />
       <mocha-package>$PROJECT_DIR$/node_modules/mocha</mocha-package>
       <working-directory>$PROJECT_DIR$</working-directory>
       <pass-parent-env>true</pass-parent-env>
       <ui>bdd</ui>
-      <extra-mocha-options />
+      <extra-mocha-options>--no-timeouts -b</extra-mocha-options>
+      <test-kind>TEST</test-kind>
+      <test-file>$PROJECT_DIR$/unittests/unittestconnector.js</test-file>
+      <test-names>
+        <name value="#paymentAgreements" />
+        <name value="receiveBroadcastDispute invalid signature on payment agreement" />
+      </test-names>
+      <method v="2" />
+    </configuration>
+    <configuration name="#paymentAgreements.receiveBroadcastDispute valid dispute" type="mocha-javascript-test-runner" temporary="true" nameIsGenerated="true">
+      <node-interpreter>project</node-interpreter>
+      <node-options />
+      <mocha-package>$PROJECT_DIR$/node_modules/mocha</mocha-package>
+      <working-directory>$PROJECT_DIR$</working-directory>
+      <pass-parent-env>true</pass-parent-env>
+      <ui>bdd</ui>
+      <extra-mocha-options>--no-timeouts</extra-mocha-options>
+      <test-kind>TEST</test-kind>
+      <test-file>$PROJECT_DIR$/unittests/unittestconnector.js</test-file>
+      <test-names>
+        <name value="#paymentAgreements" />
+        <name value="receiveBroadcastDispute valid dispute" />
+      </test-names>
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="mocha-javascript-test-runner">
+      <node-interpreter>project</node-interpreter>
+      <node-options />
+      <working-directory />
+      <pass-parent-env>true</pass-parent-env>
+      <ui />
+      <extra-mocha-options>--no-timeouts</extra-mocha-options>
       <test-kind>DIRECTORY</test-kind>
-      <test-directory>$PROJECT_DIR$/unittests</test-directory>
+      <test-directory />
       <recursive>false</recursive>
       <method v="2" />
     </configuration>
     <list>
       <item itemvalue="Mocha.unittests" />
       <item itemvalue="Node.js.connector.js" />
-      <item itemvalue="Node.js." />
       <item itemvalue="Nodeunit.Unnamed" />
+      <item itemvalue="Mocha.#paymentAgreements.receiveBroadcastDispute invalid signature on payment agreement" />
+      <item itemvalue="Mocha.#paymentAgreements.receiveBroadcastDispute valid dispute" />
     </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Mocha.#paymentAgreements.receiveBroadcastDispute valid dispute" />
+        <item itemvalue="Mocha.#paymentAgreements.receiveBroadcastDispute invalid signature on payment agreement" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SvnConfiguration">
     <configuration />
@@ -274,38 +317,51 @@
       <workItem from="1569792365170" duration="1986000" />
       <workItem from="1569795901894" duration="2019000" />
       <workItem from="1569802958308" duration="826000" />
-      <workItem from="1569815477575" duration="6883000" />
+      <workItem from="1569815477575" duration="12110000" />
+      <workItem from="1569884307279" duration="8211000" />
     </task>
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="ilp-reputation - 2019.09.29 at 22h 09m 33s.xml">
-      <configuration name="ilp-reputation" configurationId="mocha-javascript-test-runner" />
+    <history-entry file="#paymentAgreements_receiveBroadcastDispute_valid_dispute - 2019.10.01 at 01h 49m 08s.xml">
+      <configuration name="#paymentAgreements.receiveBroadcastDispute valid dispute" configurationId="mocha-javascript-test-runner" />
     </history-entry>
-    <history-entry file="unittests - 2019.09.29 at 22h 11m 29s.xml">
-      <configuration name="unittests" configurationId="mocha-javascript-test-runner" />
+    <history-entry file="#paymentAgreements_receiveBroadcastDispute_valid_dispute - 2019.10.01 at 01h 49m 23s.xml">
+      <configuration name="#paymentAgreements.receiveBroadcastDispute valid dispute" configurationId="mocha-javascript-test-runner" />
     </history-entry>
-    <history-entry file="unittests - 2019.09.29 at 22h 11m 48s.xml">
-      <configuration name="unittests" configurationId="mocha-javascript-test-runner" />
+    <history-entry file="#paymentAgreements_receiveBroadcastDispute_valid_dispute - 2019.10.01 at 01h 51m 15s.xml">
+      <configuration name="#paymentAgreements.receiveBroadcastDispute valid dispute" configurationId="mocha-javascript-test-runner" />
     </history-entry>
-    <history-entry file="unittests - 2019.09.29 at 22h 12m 17s.xml">
-      <configuration name="unittests" configurationId="mocha-javascript-test-runner" />
+    <history-entry file="#paymentAgreements_receiveBroadcastDispute_valid_dispute - 2019.10.01 at 01h 51m 27s.xml">
+      <configuration name="#paymentAgreements.receiveBroadcastDispute valid dispute" configurationId="mocha-javascript-test-runner" />
     </history-entry>
-    <history-entry file="unittests - 2019.09.29 at 22h 12m 26s.xml">
-      <configuration name="unittests" configurationId="mocha-javascript-test-runner" />
+    <history-entry file="#paymentAgreements_receiveBroadcastDispute_valid_dispute - 2019.10.01 at 01h 51m 51s.xml">
+      <configuration name="#paymentAgreements.receiveBroadcastDispute valid dispute" configurationId="mocha-javascript-test-runner" />
     </history-entry>
-    <history-entry file="unittests - 2019.09.30 at 03h 40m 47s.xml">
-      <configuration name="unittests" configurationId="mocha-javascript-test-runner" />
+    <history-entry file="#paymentAgreements_receiveBroadcastDispute_valid_dispute - 2019.10.01 at 01h 54m 39s.xml">
+      <configuration name="#paymentAgreements.receiveBroadcastDispute valid dispute" configurationId="mocha-javascript-test-runner" />
+    </history-entry>
+    <history-entry file="#paymentAgreements_receiveBroadcastDispute_valid_dispute - 2019.10.01 at 01h 54m 57s.xml">
+      <configuration name="#paymentAgreements.receiveBroadcastDispute valid dispute" configurationId="mocha-javascript-test-runner" />
+    </history-entry>
+    <history-entry file="#paymentAgreements_receiveBroadcastDispute_valid_dispute - 2019.10.01 at 01h 55m 12s.xml">
+      <configuration name="#paymentAgreements.receiveBroadcastDispute valid dispute" configurationId="mocha-javascript-test-runner" />
+    </history-entry>
+    <history-entry file="#paymentAgreements_receiveBroadcastDispute_valid_dispute - 2019.10.01 at 01h 55m 36s.xml">
+      <configuration name="#paymentAgreements.receiveBroadcastDispute valid dispute" configurationId="mocha-javascript-test-runner" />
+    </history-entry>
+    <history-entry file="#paymentAgreements_receiveBroadcastDispute_valid_dispute - 2019.10.01 at 01h 55m 56s.xml">
+      <configuration name="#paymentAgreements.receiveBroadcastDispute valid dispute" configurationId="mocha-javascript-test-runner" />
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="78984000" />
+    <option name="totallyTimeSpent" value="92422000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="67" y="25" width="927" height="1055" extended-state="4" />
+    <frame x="67" y="25" width="1853" height="1055" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.16039823" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.07923497" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -326,6 +382,18 @@
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="1" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/unittests/unittestconnector.js</url>
+          <line>101</line>
+          <properties lambdaOrdinal="-1" />
+          <option name="timeStamp" value="30" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/node.js" />
@@ -369,6 +437,13 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$APPLICATION_HOME_DIR$/plugins/JavaScriptLanguage/jsLanguageServicesImpl/external/lib.es5.d.ts">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="13170">
+          <caret line="891" column="8" selection-start-line="891" selection-start-column="8" selection-end-line="891" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/blockchain_reader/server.js">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
@@ -407,24 +482,20 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$APPLICATION_HOME_DIR$/plugins/JavaScriptLanguage/jsLanguageServicesImpl/external/lib.es5.d.ts">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="416">
-          <caret line="891" column="8" selection-start-line="891" selection-start-column="8" selection-end-line="891" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/unittests/unittestconnector.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="390">
-          <caret line="26" column="17" lean-forward="true" selection-start-line="26" selection-start-column="17" selection-end-line="26" selection-end-column="17" />
+        <state relative-caret-position="452">
+          <caret line="114" selection-start-line="114" selection-end-line="114" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/connector.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="438">
-          <caret line="221" column="30" selection-start-line="221" selection-start-column="30" selection-end-line="221" selection-end-column="30" />
+        <state relative-caret-position="392">
+          <caret line="220" column="8" selection-start-line="220" selection-start-column="8" selection-end-line="220" selection-end-column="8" />
+          <folding>
+            <element signature="n#!!doc" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

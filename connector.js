@@ -9,6 +9,7 @@
 */
 const jsrsasign = require('jsrsasign');
 const SortedArray = require('sorted-array');
+const blockchain_reader = require('./blockchain_reader/server');
 
 class Connector {
     constructor(masterKeyPair, signingConfig, activationTSThreshold, address) {
@@ -25,6 +26,23 @@ class Connector {
         this.activationTSThreshold = activationTSThreshold;
 
         this.signingConfig = signingConfig;
+
+        // bind this
+        this.compareExpiration.bind(this);
+        this.getNextConnector.bind(this);
+        this.identifyPacket.bind(this);
+        this.isAcceptablePaymentAgreementProposal.bind(this);
+        this.ReceivePaymentAgreementProposal.bind(this);
+        this.sendPaymentAgreementProposal.bind(this);
+        this.detectPayments.bind(this);
+        this.createDisputePacket.bind(this);
+        this.broadcastDispute.bind(this);
+        this.isAcceptableDispute.bind(this);
+        this.receiveBroadcastDispute.bind(this);
+        this.signingAlgorithm.bind(this);
+        this.verifyingAlgorithm.bind(this);
+        this.hashingAlgorithm.bind(this);
+        this.detectCounterDispute.bind(this);
     }
 
     compareExpiration(expirationAndPaymentAgreementHashPair1, expirationAndPaymentAgreementHashPair2) {
@@ -72,10 +90,14 @@ class Connector {
             const paymentAgreement = JSON.parse(serializedPaymentAgreement);
             if (this.isAcceptablePaymentAgreementProposal(paymentAgreement, serializedPaymentAgreement, signature,
                 signingConfig)) {
-                console.log('signature valid');
+                console.log('signature valid for payment agreement');
+                console.log('');
                 const paymentAgreementHash = this.hashingAlgorithm(serializedPaymentAgreement, "sha1",
                     "cryptojs");
+                console.log('hashed paymentagreement');
+                console.log('');
                 if (!(paymentAgreementHash in this.acceptedCreditorPaymentAgreements)) {
+                    console.log('hash not already stored');
                     this.acceptedCreditorPaymentAgreements[paymentAgreementHash] = [paymentAgreement, signature];
                     // Proceeds to send another payment agreement to the next connector in the path and then wait for its
                     // response before sending back a signed payment agreement back to the previous connector
@@ -193,6 +215,8 @@ class Connector {
                 return false;
                 // Send ILP reject packet
             }
+        } else {
+            console.log('invalid serializedDisputeCertificate length');
         }
     }
 
@@ -216,11 +240,16 @@ class Connector {
         return md.digest();
     }
 
-    detectCounterDispute(disputeHash) {
+    async detectCounterDispute(disputeHash) {
         const dispute = this.disputes[disputeHash];
-        
+        console.log('here');
+        const tx = await blockchain_reader.getBalanceSumbyAddress(dispute.paymentAgreement.ledgerCreditorAddress, dispute.debt.ts, dispute.debt.ts + dispute.paymentAgreement.paymentTL, dispute.paymentAgreement.ledgerDebtorAddress);
+        const txSum = tx[0];
+        const txList = tx[1];
+        console.log(txSum);
+        console.log(txList);
+        return txSum;
     }
-
 }
 
 module.exports.Connector = Connector;

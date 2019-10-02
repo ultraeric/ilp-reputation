@@ -45,15 +45,18 @@ async function getTxlistbyAddress(address){
 }
 
 async function getBalanceSumbyAddress(address, start_date, end_date, sender_address){
+  console.log('summing');
   var txlist = await api.account.txlist(address, 1, 'latest', 1, 100, 'asc');
-  sum = 0;
+  let total = 0;
+  const filteredTxList = [];
   for (var item of txlist['result']){
     if(item['from'] == sender_address && item['timeStamp'] >= start_date && item['timeStamp'] <= end_date ){
-      sum += safemath.safeDiv(item['value'],weiToEther);
+      total += safemath.safeDiv(item['value'],weiToEther);
+      filteredTxList.push(item);
     }
   }
-  console.log(sum);
-  return sum;
+  console.log(total);
+  return [total, filteredTxList];
 
 }
 
@@ -79,8 +82,7 @@ async function monitor(address){
 //APIs, Tests
 //getTxbyHash(hash_test);
 //getTxlistbyAddress(address_test);
-getBalanceSumbyAddress(address_test,start_date_test, end_date_test, sender_address_test);
+//getBalanceSumbyAddress(address_test,start_date_test, end_date_test, sender_address_test);
 //monitor(address_test);
 
-
-
+module.exports.getBalanceSumbyAddress = getBalanceSumbyAddress;

@@ -99,8 +99,7 @@ describe('#paymentAgreements', function() {
             paymentTL: 1, disputeTL: 10, debtorAddress: '12345', creditorAddress: '54321',
             expirationTS: currentTime + 500}, "passcode", signingConfig);
         let paymentAgreementHash = creditor.identifyPacket(proposal, signingConfig);
-        (async function() {
-            await sleep(1);
+        setTimeout(() => {
             const dispute = creditor.createDisputePacket(
                 creditor.acceptedCreditorPaymentAgreements[paymentAgreementHash][0],
                 creditor.acceptedCreditorPaymentAgreements[paymentAgreementHash][1],
@@ -109,7 +108,34 @@ describe('#paymentAgreements', function() {
                 "passcode", signingConfig);
             const disputeHash = thirdNode.identifyPacket(broadcastedDisputePacket, signingConfig);
             assert(disputeHash != false);
-        })();
+        }, 2);
+    });
+
+    it('correctly detect valid counter-dispute', function() {
+        const address_test = "0x8fD00f170FDf3772C5ebdCD90bF257316c69BA45";
+        const sender_address_test = "0x8fd00f170fdf3772c5ebdcd90bf257316c69ba45";
+        const start_date_test = 1565754237;
+        const end_date_test = 1565854345;
+        let proposal = debtor.sendPaymentAgreementProposal({reputationCalculatorID: 0, activationTS: start_date_test,
+            paymentTL: end_date_test - start_date_test, disputeTL: Date.now(), counterDisputeTL: 500, debtorAddress: '12345', creditorAddress: '54321',
+            expirationTS: end_date_test, ledgerDebtorAddress: sender_address_test, ledgerCreditorAddress: address_test}, "passcode", signingConfig);
+        console.log('identifying packet...');
+        let paymentAgreementHash = creditor.identifyPacket(proposal, signingConfig);
+        console.log('identified ');
+        console.log('settimeout');
+        const dispute = creditor.createDisputePacket(
+            creditor.acceptedCreditorPaymentAgreements[paymentAgreementHash][0],
+            creditor.acceptedCreditorPaymentAgreements[paymentAgreementHash][1],
+            2, { ts: start_date_test });
+        const broadcastedDisputePacket = creditor.broadcastDispute(dispute,
+            "passcode", signingConfig);
+        const disputeHash = thirdNode.identifyPacket(broadcastedDisputePacket, signingConfig);
+        //assert(disputeHash != false);
+        let txSum;
+        thirdNode.detectCounterDispute(disputeHash).then((ret) => {
+            txSum = ret;
+            console.log(txSum);
+        });
     });
 
 

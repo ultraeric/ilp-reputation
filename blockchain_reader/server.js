@@ -32,9 +32,22 @@ fetch(api)
 
 
 async function getTxbyHash(hash){
-  var tx = await api.proxy.eth_getTransactionByHash(hash);
-  console.log(tx);
+  const tx = await api.proxy.eth_getTransactionByHash(hash);
+  tx['result']['timeStamp'] = (await api.proxy.eth_getBlockByNumber(tx['result']['blockNumber']))['result']['timestamp'];
   return tx;
+}
+
+async function getTxSum(txList, sender_address, start_date, end_date, receiver_address) {
+  let payment = 0;
+  for(let i = 0; i < txList.length; i++) {
+    const item = (await getTxbyHash(txList[i]['hash']))['result'];
+    if(item['from'] == sender_address && parseInt(item['timeStamp'], 16) >= start_date &&
+        parseInt(item['timeStamp'], 16) <= end_date &&
+        item['to'] == receiver_address ){
+      payment += safemath.safeDiv(item['value'],weiToEther);
+    }
+  }
+  return payment;
 }
 
 async function getTxlistbyAddress(address){
@@ -45,17 +58,15 @@ async function getTxlistbyAddress(address){
 }
 
 async function getBalanceSumbyAddress(address, start_date, end_date, sender_address){
-  console.log('summing');
   var txlist = await api.account.txlist(address, 1, 'latest', 1, 100, 'asc');
   let total = 0;
   const filteredTxList = [];
   for (var item of txlist['result']){
-    if(item['from'] == sender_address && item['timeStamp'] >= start_date && item['timeStamp'] <= end_date ){
+    if(item['from'] == sender_address && item['to'] == address && item['timeStamp'] >= start_date && item['timeStamp'] <= end_date ){
       total += safemath.safeDiv(item['value'],weiToEther);
       filteredTxList.push(item);
     }
   }
-  console.log(total);
   return [total, filteredTxList];
 
 }
@@ -86,3 +97,4 @@ async function monitor(address){
 //monitor(address_test);
 
 module.exports.getBalanceSumbyAddress = getBalanceSumbyAddress;
+module.exports.getTxSum = getTxSum;

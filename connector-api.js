@@ -41,8 +41,8 @@ class Connector {
         this.hashingAlgorithm.bind(this);
         this.detectCounterDispute.bind(this);
         this.receivePaymentAgreementProposalAcceptance.bind(this);
-        this.sendPaymentAgreementProposalAcceptance.bind(this);
         this.decidePaymentAgreementProposal.bind(this);
+        this.getDebt.bind(this);
     }
 
     compareExpiration(expirationAndPaymentAgreementHashPair1, expirationAndPaymentAgreementHashPair2) {
@@ -61,7 +61,9 @@ class Connector {
             console.log('broadcastedDispute');
             return this.receiveBroadcastDispute(packet.substring(4));
         } else if (packet.substring(0,4) == '0001') {
-            return this.receivePaymentAgreementProposalAcceptance(packet);
+            return this.receivePaymentAgreementProposalAcceptance(packet.substring(4));
+        } else if (packet.substring(0,4) =='0004') {
+            return this.receiveCounterDispute(packet.substring(4));
         }
     }
 
@@ -120,7 +122,10 @@ class Connector {
             this.acceptedCreditorPaymentAgreements[paymentAgreementHash] = this.pendingCreditorPaymentAgreements[paymentAgreementHash];
             delete this.pendingCreditorPaymentAgreements[paymentAgreementHash];
             // send back proposal acceptance
-            return this.sendPaymentAgreementProposalAcceptance(paymentAgreementHash);
+            const privateKeyObj = jsrsasign.KEYUTIL.getKey(jsrsasign.KEYUTIL.getPEM(this.masterKeyPair.prvKeyObj, "PKCS8PRV",
+                "passcode"), "passcode");
+            const signature = this.signingAlgorithm(privateKeyObj,  paymentAgreementHash, this.signingConfig.algorithm);
+            return '0001' + paymentAgreementHash + signature;
         } else {
             delete this.pendingCreditorPaymentAgreements[paymentAgreementHash];
             return false;
@@ -128,23 +133,24 @@ class Connector {
     }
 
     receivePaymentAgreementProposalAcceptance(serializedAcceptance) {
-        const publicKey = this.publicKeyInfrastructure[paymentAgreement.debtorAddress];
-        const publicKeyObj = jsrsasign.KEYUTIL.getKey(publicKey);
-        const paymentAgreementHash = serializedAcceptance.substring(4);
-        const signature = paymentAgreementHash.substring(paymentAgreementHash.length - this.signingConfig.signatureLength);
-        if (this.verifyingAlgorithm(publicKeyObj, paymentAgreementHash, signature, this.signingConfig.algorithm &&
-            paymentAgreementHash in this.pendingDebtorPaymentAgreements
-        )) {
-            this.acceptedDebtorPaymentAgreements[paymentAgreementHash] = this.pendingDebtorPaymentAgreements[paymentAgreementHash];
-            delete this.pendingDebtorPaymentAgreements[paymentAgreementHash];
+        const paymentAgreementHash = serializedAcceptance.substring(4, serializedAcceptance.length - this.signingConfig.signatureLength);
+        if(paymentAgreementHash in this.pendingDebtorPaymentAgreements) {
+            const paymentAgreement = this.pendingDebtorPaymentAgreements[paymentAgreementHash];
+            const publicKey = this.publicKeyInfrastructure[paymentAgreement.debtorAddress];
+            const publicKeyObj = jsrsasign.KEYUTIL.getKey(publicKey);
+            const signature = serializedAcceptance.substring(serializedAcceptance.length - this.signingConfig.signatureLength);
+            if (this.verifyingAlgorithm(publicKeyObj, paymentAgreementHash, signature, this.signingConfig.algorithm) &&
+                paymentAgreementHash in this.pendingDebtorPaymentAgreements
+            ) {
+                this.acceptedDebtorPaymentAgreements[paymentAgreementHash] = this.pendingDebtorPaymentAgreements[paymentAgreementHash];
+                delete this.pendingDebtorPaymentAgreements[paymentAgreementHash];
+            } else {
+                return false;
+            }
+        } else {
+            return false;
         }
-    }
 
-    sendPaymentAgreementProposalAcceptance(paymentAgreementHash) {
-        const privateKeyObj = jsrsasign.KEYUTIL.getKey(jsrsasign.KEYUTIL.getPEM(this.masterKeyPair.prvKeyObj, "PKCS8PRV",
-            "passcode"), "passcode");
-        const signature = this.signingAlgorithm(privateKeyObj,  paymentAgreementHash, this.signingConfig.algorithm);
-        return '0001' + paymentAgreementHash + signature;
     }
 
     sendPaymentAgreementProposal(paymentAgreement) {
@@ -169,14 +175,20 @@ class Connector {
         }
     }
 
-    async detectPayments(paymentAgreementHash, passcode) {
+    async detectPayments(paymentAgreementHash) {
         const paymentAgreementAndSignature = this.acceptedCreditorPaymentAgreements[paymentAgreementHash];
         // Loop through payments starting from activation timestamp and see if payments added up
         // If not all payments add up, dispute remaining amount automatically
-        let missingPayments = 10;
+        const debt = this.getDebt();
+        const paymentAgreement = paymentAgreementAndSignature[0];
+        blockchain_reader.getBalanceSumbyAddress(paymentAgreement.ledgerCreditorAddress, debt.ts, debt.ts + paymentAgreement.paymentTL, paymentAgreement.ledgerDebtorAddress);
         console.log(paymentAgreementAndSignature);
-        return this.broadcastDispute(this.createDisputePacket(paymentAgreementAndSignature[0], paymentAgreementAndSignature[1], { ts: 'temp' }), passcode);
+        return this.broadcastDispute(this.createDisputePacket(paymentAgreementAndSignature[0], paymentAgreementAndSignature[1], { ts: 'temp' }));
         //Exits and does no broadcast if missingPayments reaches 0
+    }
+
+    getDebt() {
+        return { ts: Date.now(), amount: 100};
     }
 
     createDisputePacket(paymentAgreement, debtorSignature, debt) {
@@ -273,17 +285,43 @@ class Connector {
         //proceed broadcast
         if (txSum >= dispute.debt.amount) {
             console.log('full payment detected');
-            return JSON.stringify(txList);
-        } else if (txSum > 0) {
-            console.log('partial payment detected');
-            return JSON.stringify(txList);
+            const serializedCounterDispute = JSON.stringify({
+                txList: txList,
+                disputeHash: disputeHash,
+                counterDisputer: this.address
+            });
+            const privateKeyObj = jsrsasign.KEYUTIL.getKey(jsrsasign.KEYUTIL.getPEM(this.masterKeyPair.prvKeyObj, "PKCS8PRV",
+                "passcode"), "passcode");
+            // TODO: fix bug here
+            const signature = this.signingAlgorithm(privateKeyObj, serializedCounterDispute, this.signingConfig.algorithm);
+            // Send instead of return
+            return '0004' + serializedCounterDispute + signature;
         } else {
             console.log('no payment detected in counter dispute');
             return false;
         }
     }
 
-    receiveCounterDispute(serializedTxList) {
+    async receiveCounterDispute(serializedCounterDisputeCertificate) {
+
+
+        const serializedCounterDispute = serializedCounterDisputeCertificate.substring(0,serializedCounterDisputeCertificate.length - this.signingConfig.signatureLength);
+        const counterDispute = JSON.parse(serializedCounterDispute);
+
+        const signature = serializedCounterDisputeCertificate.substring(serializedCounterDisputeCertificate.length - this.signingConfig.signatureLength);
+
+        const publicKey = this.publicKeyInfrastructure[counterDispute.counterDisputer];
+        const publicKeyObj = jsrsasign.KEYUTIL.getKey(publicKey);
+        if(this.verifyingAlgorithm(publicKeyObj, serializedCounterDispute, signature, this.signingConfig.algorithm)) {
+            const txList = counterDispute.txList;
+            const dispute = this.disputes[counterDispute.disputeHash];
+            const txSum = await blockchain_reader.getTxSum(txList, dispute.paymentAgreement.ledgerDebtorAddress, dispute.debt.ts,
+                dispute.debt.ts + dispute.paymentAgreement.paymentTL, dispute.paymentAgreement.ledgerCreditorAddress);
+            return txSum >= dispute.debt.amount;
+        } else {
+            return false;
+        }
+
     }
 }
 

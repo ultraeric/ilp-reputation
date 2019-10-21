@@ -10,10 +10,14 @@ import (
 	"log"
 	"math/big"
 	"os"
+	"path/filepath"
 	"time"
 )
 
 func main() {
+	newpath := filepath.Join(".", "ca_credentials")
+	os.MkdirAll(newpath, 0700)
+
 	ca := &x509.Certificate{
 		SerialNumber: big.NewInt(1653),
 		Subject: pkix.Name{

@@ -1,0 +1,14 @@
+{
+  "name": "ilp-reputation",
+  "version": "1.0.0",
+  "dependencies": {
+    "express": "^4.17.1",
+    "jsrsasign": "^8.0.12",
+    "mongoose": "^5.7.1",
+    "sorted-array": "^2.0.4",
+    "ws": "^7.1.2"
+  },
+  "devDependencies": {
+    "mocha": "^6.2.1"
+  }
+}

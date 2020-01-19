@@ -1,0 +1,16 @@
+For testing:
+    -cd to ilp-reputation directory
+    1.) Start two mongo servers
+        $ mongod --port 12345 --dbpath /dbdirectoryofyourchoice
+        ~~~ In New Terminal ~~~
+        $ mongod
+    2.) Start WebSocket servers in two new terminals
+        ~~~ In New Terminal ~~~
+        $ node server/index.js
+        ~~~ In New Terminal ~~~
+        $ MONGOPORT=12345 PORT=3031 node server/index.js
+    3.) Use Node terminal to send commands to servers
+        $ node
+        > var con = require('./test-node');
+        > con.SetWebSocket('ws://localhost:9030');
+        > con.testSend('9998ws://localhost:3031');

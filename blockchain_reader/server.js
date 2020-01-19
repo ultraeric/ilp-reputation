@@ -8,6 +8,7 @@ const apikey = 'NSWRJMID63ZH3DDXY73P3X6PY69A28EJEH';
 var api = require('etherscan-api').init(apikey);
 const hash_test = "0x5335c4bb2d3fb22c8d4cec45551a28066a7db95763f20907363d92df7486ab7d";
 const address_test = "0x8fD00f170FDf3772C5ebdCD90bF257316c69BA45";
+const sender_address_test = "0x8fd00f170fdf3772c5ebdcd90bf257316c69ba45";
 const start_date_test = 1565754237;
 const end_date_test = 1565854345;
 //const api = 'http://api.etherscan.io/api?module=account&action=tokentx&address=0x4e83362442b8d1bec281594cea3050c8eb01311c&startblock=0&endblock=999999999&sort=asc&apikey=NSWRJMID63ZH3DDXY73P3X6PY69A28EJEH'
@@ -31,9 +32,22 @@ fetch(api)
 
 
 async function getTxbyHash(hash){
-  var tx = await api.proxy.eth_getTransactionByHash(hash);
-  console.log(tx);
+  const tx = await api.proxy.eth_getTransactionByHash(hash);
+  tx['result']['timeStamp'] = (await api.proxy.eth_getBlockByNumber(tx['result']['blockNumber']))['result']['timestamp'];
   return tx;
+}
+
+async function getTxSum(txList, sender_address, start_date, end_date, receiver_address) {
+  let payment = 0;
+  for(let i = 0; i < txList.length; i++) {
+    const item = (await getTxbyHash(txList[i]['hash']))['result'];
+    if(item['from'] == sender_address && parseInt(item['timeStamp'], 16) >= start_date &&
+        parseInt(item['timeStamp'], 16) <= end_date &&
+        item['to'] == receiver_address ){
+      payment += safemath.safeDiv(item['value'],weiToEther);
+    }
+  }
+  return payment;
 }
 
 async function getTxlistbyAddress(address){
@@ -43,16 +57,17 @@ async function getTxlistbyAddress(address){
   
 }
 
-async function getBalanceSumbyAddress(address, start_date, end_date){
+async function getBalanceSumbyAddress(address, start_date, end_date, sender_address){
   var txlist = await api.account.txlist(address, 1, 'latest', 1, 100, 'asc');
-  sum = 0;
+  let total = 0;
+  const filteredTxList = [];
   for (var item of txlist['result']){
-    if(item['timeStamp'] >= start_date && item['timeStamp'] <= end_date ){
-      sum += safemath.safeDiv(item['value'],weiToEther);
+    if(item['from'] == sender_address && item['to'] == address && item['timeStamp'] >= start_date && item['timeStamp'] <= end_date ){
+      total += safemath.safeDiv(item['value'],weiToEther);
+      filteredTxList.push(item);
     }
   }
-  console.log(sum);
-  return sum;
+  return [total, filteredTxList];
 
 }
 
@@ -78,8 +93,8 @@ async function monitor(address){
 //APIs, Tests
 //getTxbyHash(hash_test);
 //getTxlistbyAddress(address_test);
-getBalanceSumbyAddress(address_test,start_date_test, end_date_test);
+//getBalanceSumbyAddress(address_test,start_date_test, end_date_test, sender_address_test);
 //monitor(address_test);
 
-
-
+module.exports.getBalanceSumbyAddress = getBalanceSumbyAddress;
+module.exports.getTxSum = getTxSum;
